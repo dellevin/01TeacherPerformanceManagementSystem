@@ -1,0 +1,138 @@
+<!DOCTYPE html>
+<html>
+
+<head>
+	<title></title>
+	<meta charset="UTF-8">
+	<link rel="stylesheet" href="../../element-ui-2.13.0/lib/theme-chalk/index.css" />
+	<script type="text/javascript" src="../../vue/vue-v2.6.10.js"></script>
+	<script type="text/javascript" src="../../element-ui-2.13.0/lib/index.js"></script>
+	<script type="text/javascript" src="../../vue/axios-0.18.0.js"></script>
+</head>
+
+<body>
+	<div id="app">
+
+		
+		<el-tag type="info" effect="dark" v-if="inputVisible" closable="true" :disable-transitions="disable"
+			@close="handleClose">教师分数排名</el-tag>
+
+
+
+		<div v-if="inputVisible">
+			<template>
+				<!-- 
+					handleSelectionChange 就是在点击复选框时执行的方法
+				-->
+				<el-table :data="tableData" @selection-change="handleSelectionChange" size="medium"
+					highlight-current-row="true" style="width: 100%">
+					<!-- 
+						type类型为selection 那么页面效果就是复选框
+						prop属性值为uid，那么每个用户的id就绑定在了复选框中
+					-->
+					<el-table-column  width="55" >
+					</el-table-column>
+
+					<el-table-column width="100px" label="序号" type="index">
+					</el-table-column>
+					<el-table-column label="教师工号" prop="tnum" width="300px">
+					</el-table-column>
+
+					<el-table-column label="教师姓名" prop="tname">
+					</el-table-column>
+
+					<el-table-column label="分数" prop="tmarks">
+					</el-table-column>
+
+				</el-table>
+			</template>
+			<br />
+
+
+		</div>
+
+	</div>
+</body>
+<script>
+	axios.defaults.withCredentials = true
+	new Vue({
+		el: "#app",
+		data: {
+			/*分页相关*/
+			tableData: [], //当前页要展示的分页列表数据
+			search: '', //查询条件
+			pageSize: 300, //每页显示的记录数
+			currentPage: 1, //当前页码
+			totalCount: '', //总记录数
+			/*批量删除*/
+			multipleSelection: [], //批量删除存放选中的复选框中对象的数组
+			delarr: [], //存放删除的数据
+			/*选项卡*/
+			inputVisible: true,
+			disable: false,
+			/* 对话框 */
+			dialogVisible: false,
+			dialogVisible1: false,
+			ruleForm: {
+				tid:'',
+				tnum:'',
+				tname:'',
+                tmarks:'',
+				ttraining:''
+			},
+
+		},
+		methods: {
+			//点击选项卡小叉叉的方法
+			handleClose() {
+				this.inputVisible = false;
+				this.disable = true;
+			},
+		
+			//点击复选框时触发的方法
+			handleSelectionChange(val) {
+				//参数val就是当前被选中的所有用户保存的数组
+				this.multipleSelection = val; //将要删除的所有对象保存起来
+			},
+
+			//当前页码发生改变的方法
+			handleCurrentChange: function (currentPage) {
+				//更新当前页码的值
+				this.currentPage = currentPage;
+				//重新调用获取方法
+				this.findAllUser();
+			},
+			//模糊查询输入框失焦事件，进行模糊查询的方法
+
+			//获取所有用户的方法
+			findAllUser() {	
+				axios({
+					method: "get",
+					/*
+						使用ElementUI的分页组件，实现分页功能，页面中是可以改变当前页码及每页数据量的
+					*/
+					url: "http://localhost:8080/BackEnd/Ttraining?function=findAllTtrainingDesc",
+				}).then(response => {
+					if (response.data.code == 200) {
+						//为用户数组赋值
+						this.tableData = response.data.data;
+					} else {
+						this.$message({
+							message: response.data.msg,
+							type: "error"
+						})
+					}
+				})
+			},
+
+			resetForm(formName) {
+
+			}
+		},
+		created() {
+			this.findAllUser();
+		}
+	})
+</script>
+
+</html>

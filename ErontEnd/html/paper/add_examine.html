@@ -1,0 +1,315 @@
+<!DOCTYPE html>
+<html>
+
+<head>
+    <title></title>
+    <meta charset="UTF-8">
+    <link rel="stylesheet" href="../../element-ui-2.13.0/lib/theme-chalk/index.css" />
+    <script type="text/javascript" src="../../vue/vue-v2.6.10.js"></script>
+    <script type="text/javascript" src="../../element-ui-2.13.0/lib/index.js"></script>
+    <script type="text/javascript" src="../../vue/axios-0.18.0.js"></script>
+</head>
+
+<body>
+    <div id="app">
+        <!--上传课程-->
+        <el-tag type="info" effect="dark" closable="true" :disable-transitions="disable" @close="handleClose">添加论文信息
+        </el-tag>
+        <div v-if="inputVisible">
+            <!--表单-->
+            <el-form :model="ruleForm" :rules="rules" ref="ruleForm" label-width="100px" class="demo-ruleForm">
+                <el-form-item label="论文题目" prop="courseName">
+                    <el-input v-model="ruleForm.courseName" style="width: 210px;"></el-input>
+                </el-form-item>
+
+                <el-form-item label="作者" prop="descs">
+                    <el-input v-model="ruleForm.descs" style="width: 210px;"></el-input>
+                </el-form-item>
+
+                <el-form-item label="学科类型" prop="courseType">
+                    <el-select v-model="ruleForm.courseType" placeholder="请选择学科类型">
+                        <el-option label="学科类型1" value="1"></el-option>
+                        <el-option label="学科类型2" value="2"></el-option>
+                        <el-option label="学科类型3" value="3"></el-option>
+                    </el-select>
+                </el-form-item>
+
+                <el-form-item label="学科门类" prop="menLei">
+                    <el-input v-model="ruleForm.menLei" style="width: 210px;"></el-input>
+                </el-form-item>
+
+                <el-form-item label="刊物类型" prop="leiXing">
+                    <el-input v-model="ruleForm.leiXing" style="width: 210px;"></el-input>
+                </el-form-item>
+
+                <el-form-item label="刊物/论文集" prop="wenJi">
+                    <el-input v-model="ruleForm.wenJi" style="width: 210px;"></el-input>
+                </el-form-item>
+
+                <el-form-item label="项目来源" prop="LaiYuan">
+                    <el-input v-model="ruleForm.laiYuan" style="width: 210px;"></el-input>
+                </el-form-item>
+
+                <el-form-item label="发表范围" prop="fanWei">
+                    <el-input v-model="ruleForm.fanWei" style="width: 210px;"></el-input>
+                </el-form-item>
+                <el-form-item label="期刊版面" prop="banMian">
+                    <el-input v-model="ruleForm.banMian" style="width: 210px;"></el-input>
+                </el-form-item>
+                <el-form-item label="译文" prop="yiWen">
+                    <el-input v-model="ruleForm.yiWen" style="width: 400px;" type="textarea"></el-input>
+                </el-form-item>
+
+
+                <div style="width: 550px">
+                    <el-form-item label="发表时间">
+                        <el-col :span="11">
+                            <el-date-picker type="date" placeholder="选择日期" v-model="ruleForm.date1"
+                                style="width: 100%;">
+                            </el-date-picker>
+                        </el-col>
+                    </el-form-item>
+                </div>
+
+
+
+
+                <!-- 
+					handleRemove 点击文件列表后小叉叉时执行，移除文件的方法
+					:limit="1" 表示当前上传组件，最多上传一个文件
+					handleExceed 当选取的文件超出了设定的数量时执行的方法
+					:http-request="myUpload" myUpload方法，就是页面中最核心的上传方法
+					ref="upload" 就是为当前组件设置的名称
+					action 就是接收上传操作的后台地址
+					:auto-upload="false" 取消自动上传，改为手动
+				-->
+
+                <!-- 设置宽度 -->
+                <!-- <div style="width: 400px ;color: rgb(99, 199, 249);">
+                    <el-upload style="margin-left: 25px;" :on-remove="handleRemove" :on-exceed="handleExceed"
+                        :http-request="myUpload" class="upload-demo" ref="upload" :before-remove="beforeRemove"
+                        action="http://localhost:8080/BackEnd/course?function=uploadFile" :limit="2" :auto-upload="false">
+                        <el-button slot="trigger" size="small" type="primary">选取文件</el-button>
+                        <el-button style="margin-left: 10px;" size="small" type="success" @click="submitUpload(1)">
+                            上传到服务器
+                        </el-button>
+                        <div slot="tip" class="el-upload__tip">
+                            &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;只能上传doc/docx/pdf文件</div>
+                    </el-upload> -->
+
+                </div>
+
+
+                <br>
+                <br>
+
+
+
+
+            </el-form>
+            <div slot="footer" class="dialog-footer" style="margin-left: 20px;">
+                <el-button @click="handleClose">取 消</el-button>
+                <el-button type="primary" @click="submitForm('ruleForm')">确 定</el-button>
+            </div>
+        </div>
+        <!--结尾-->
+    </div>
+</body>
+<script>
+    axios.defaults.withCredentials = true
+    new Vue({
+        el: "#app",
+        data: {
+            //你笑老子命名乱，老子笑你全栈难
+            ruleForm: {
+                date1: '', //发表时间
+                courseName: '', //论文题目
+                descs: '', //这个作为第一作者
+                courseType: '', //学科类型
+                menLei: '',
+                leiXing: '',
+                wenJi: '',
+                laiYuan: '',
+                fanWei: '',
+                banMian: '',
+                yiWen: ''
+            },
+            /*规则*/
+            rules: {
+                courseName: [{
+                    required: true,
+                    message: '请输入论文题目',
+                    trigger: 'blur'
+                }, ],
+                descs: [{
+                    required: true,
+                    message: '请输入作者名称',
+                    trigger: 'blur'
+                }],
+                courseType: [{
+                    required: true,
+                    message: '请输入学科类型',
+                    trigger: 'blur'
+                }],
+                menLei: [{
+                    required: true,
+                    message: '请输入学科门类',
+                    trigger: 'blur'
+                }],
+                leiXing: [{
+                    required: true,
+                    message: '请输入刊物类型',
+                    trigger: 'blur'
+                }],
+                wenJi: [{
+                    required: true,
+                    message: '请输入论文集',
+                    trigger: 'blur'
+                }],
+                laiYuan: [{
+                    required: true,
+                    message: '请输入项目来源',
+                    trigger: 'blur'
+                }],
+                fanWei: [{
+                    required: true,
+                    message: '请输入发表范围',
+                    trigger: 'blur'
+                }],
+                banMian: [{
+                    required: true,
+                    message: '请输入期刊版面',
+                    trigger: 'blur'
+                }],
+                yiWen: [{
+                    required: true,
+                    message: '请输入译文，拉动右下角可以调整大小',
+                    trigger: 'blur'
+                }],
+            },
+            /*文件上传*/
+            dialogDocUrl: '',
+            dialogImageUrl:'',
+            /*选项卡*/
+            inputVisible: true,
+            disable: false,
+        },
+        methods: {
+            //关闭选项卡的方法
+            handleClose() {
+                this.inputVisible = false;
+                this.disable = true;
+            },
+            //上传文件数量超出设定值时的方法
+            handleExceed(files, fileList) {
+                /*
+                	// files，保存现在选取到的文件的数组
+                	// fileList，保存已经选取过的文件的数组
+                */
+                this.$message({
+                    message: `当前限制选择 1 个文件，本次选择了 ${files.length} 个文件，
+							共选择了 ${files.length + fileList.length} 个文件`,
+                    type: "warning"
+                });
+            },
+
+
+            //最最核心的上传方法，当组件执行了submit()方法时，该方法就会执行！
+            myUpload(content) {
+                // /*
+                // 	参数content中有我们所需要的数据：
+                // 		action 表示我们上传的地址
+                // 		file 表示我们上传的文件
+                // 	现在上传发送请求，必须使用post请求！！！因为我们要传递文件作为数据，get不支持传文件
+                // 	而且构建参数时，不能再使用URLSearchParams对象了，因为该对象只能存储字符串参数
+                // 	我们需要使用支持多类型参数构建的对象FormData！！！这个FormData对象
+                // 	不仅支持构建文件作为参数，也可以构建字符串
+                // */
+                let params = new FormData();
+                params.append("file", content.file);
+                params.append("function", "uploadFile");
+                // let functions = params.get('file');
+                // console.log("---------"+functions);
+                axios({
+                    method: "post",
+                    url: content.action,
+                    data: params
+                }).then(response => {
+                    //console.log("经过此步骤了");
+                    if (response.data.code == 1) {
+                        //为图片的路径赋值
+                        this.dialogDocUrl = "http://localhost:8080/eduSource/" + response.data.data;
+                    }
+                })
+            },
+
+
+
+
+            //点击上传服务器时执行的方法
+            submitUpload(value) {
+                this.$refs.upload.submit();
+				},
+            beforeRemove(file, fileList) {
+                return this.$confirm(`确定移除 ${ file.name }？`);
+            },
+            //移除上传文件时执行的方法,暂时不弄，直接开摆，服务器内存大，不慌~
+            handleRemove(file, fileList) {
+
+            },
+
+
+
+            //点击添加按钮的方法
+            submitForm(formName) {
+                this.$refs[formName].validate((valid) => {
+                    if (valid) {
+                        //构建课程参数
+                        let params = new URLSearchParams();
+                        for (let key in this.ruleForm) {
+                            params.append(key, this.ruleForm[key]);
+                            console.log(key + "-----" + this.ruleForm[key])
+                        }
+
+                        //构建课程的图片跟视频
+                        params.append("doc",
+                            this.dialogDocUrl.substring(this.dialogDocUrl.lastIndexOf("/") + 1));
+
+
+                        //方法名
+                        params.append("function", "addCourse");
+
+                        axios({
+                            method: "post",
+                            url: "http://localhost:8080/BackEnd/course",
+                            data: params
+                        }).then(response => {
+                            if (response.data.code == 200) {
+                                this.$message({
+                                    message: response.data.msg,
+                                    type: "success"
+                                })
+                                setTimeout(function () {
+                                    window.location = "/html/paper/statistics.html";
+                                }, 1500)
+                            } else {
+                                this.$message({
+                                    message: response.data.msg,
+                                    type: "error"
+                                })
+                            }
+                        })
+                    } else {
+                        this.$message({
+                            message: "数据有误",
+                            type: "error"
+                        })
+                    }
+                });
+            }
+
+        }
+    })
+</script>
+
+</html>

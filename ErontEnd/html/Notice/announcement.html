@@ -1,0 +1,166 @@
+<!DOCTYPE html>
+<html>
+
+<head>
+    <title></title>
+    <meta charset="UTF-8">
+    <link rel="stylesheet" href="../../element-ui-2.13.0/lib/theme-chalk/index.css" />
+    <script type="text/javascript" src="../../vue/vue-v2.6.10.js"></script>
+    <script type="text/javascript" src="../../element-ui-2.13.0/lib/index.js"></script>
+    <script type="text/javascript" src="../../vue/axios-0.18.0.js"></script>
+    <style>
+        .el-carousel__item h3 {
+            color: #475669;
+            font-size: 14px;
+            opacity: 0.75;
+            line-height: 200px;
+            margin: 0;
+            margin-bottom: 20px;
+        }
+
+        .el-carousel__item:nth-child(2n) {
+            background-color: #99a9bf;
+        }
+
+        .el-carousel__item:nth-child(2n+1) {
+            background-color: #d3dce6;
+        }
+
+        .text {
+            font-size: 14px;
+        }
+
+        .item {
+            margin-bottom: 18px;
+        }
+
+        .clearfix:before,
+        .clearfix:after {
+            display: table;
+            content: "";
+        }
+
+        .clearfix:after {
+            clear: both
+        }
+
+        .el-card {
+            min-width: 380px;
+            margin-right: 20px;
+            transition: all .5s;
+            margin-bottom: 20px;
+        }
+
+        .el-card:hover {
+            margin-top: -5px;
+        }
+
+        .box-card {
+            width: 490px;
+            float: left;
+        }
+
+        .box-card1 {
+            width: 700px;
+            float: left;
+        }
+    </style>
+</head>
+
+<body>
+    <div id="app">
+        <el-carousel :interval="4000" type="card" height="200px">
+            <el-carousel-item v-for="item in imageList" :key="item"> 
+                <h3 class="medium">  <img :src="item.url"> </h3>
+            </el-carousel-item>
+        </el-carousel>
+
+        <div>
+            <el-card class="box-card" style="min-height: 200px;"  onclick="">
+                <div slot="header" class="clearfix">
+                    <span>简介</span>
+                </div>
+                <div class="text item">
+                    <el-collapse v-model="activeNames" @change="handleChange">
+                        <el-collapse-item title="前端开发环境" name="1">
+                            <div>Vue前端框架 ： Vue前端框架是用于构建用户界面的渐进式框架，采用自下而上增量式开发设计。</div>
+                            <br>
+                            <div>Element     ： Element是一套以 Vue2.0为基础桌面组件库，供开发者、设计师和产品管理人员使用。 </div>
+                        </el-collapse-item>
+                        <el-collapse-item title="后端开发环境" name="2">
+                            <div>MySQL ： MySQL是一个关系型数据库，与其他流行的数据库相比，它可能没有最好的功能和性能，但MySQL是免费和开源的，并能完成基本功能。</div>
+                            <br>
+                            <div>Java  ： Java是一种面向对象的语言，它在继承了C++的优势的同时，也抛弃了C++中那些晦涩难懂的多继承、指针等概念。</div>
+                        </el-collapse-item>
+                        <el-collapse-item title="开发工具" name="3">
+                            <div>Vs Code ： Vs Code的全名是 Visual Studio Code，这是微软公司在 Build开发者会议上正式发布的一款跨平台源代码编辑器，用于编写面向当代网络和云计算的应用。</div>
+                            <br>
+                            <div>IDEA    ： IDEA的全名是IntelliJ IDEA，是一种整合的Java程序语言开发环境。IntelliJ被认为是最优秀的Java开发工具，特别是智能代码助手，自动代码提示，重构，JavaEE支持，各种版本工具，Junit，CVS集成，代码分析，创新GUI设计。</div>
+
+                        </el-collapse-item>
+                        <el-collapse-item title="未来规划" name="4">
+                            <div>针对数据库进行优化：受于技术限制，在数据库方面，查询，更改，数据多了会出现混乱的效果，在日后急需完善</div>
+                            <br>
+                            <div>前端展示界面      ：由于采用的是vue-element的开发方式，在标签使用上还不完善，需要在后期进行大幅度的更改</div>
+                            <br>
+                            <div>后端命令优化      ：使用框架较少，在不断的学习中将采用Lombok、Spring、等多种的框架，精简代码量，达到占用小，系统更加灵活的效果</div>
+                        </el-collapse-item>
+
+                    </el-collapse>
+                </div>
+            </el-card>
+        </div>
+
+        <div>
+            <el-card class="box-card1" style="min-height: 200px;" align="middle" onclick="">
+                <div slot="header" class="clearfix">
+                    <span>日历</span>
+                </div>
+                <div class="text item">
+                    <el-calendar v-model="value">
+                    </el-calendar>
+                </div>
+            </el-card>
+        </div>
+
+    </div>
+</body>
+
+<script>
+    axios.defaults.withCredentials = true
+    new Vue({
+        el: "#app",
+        data: {
+            activeNames: '1',
+            value: new Date(),
+            imageList: [
+                {
+                    url: '../../img/1.jpg'
+                },
+                {
+                    url: '../../img/2.jpg'
+
+                },
+                {
+                    url: '../../img/3.jpg'
+
+                },
+                {
+                    url: '../../img/4.jpg'
+
+                },
+            ]
+        },
+        methods: {
+            handleChange(val) {
+                console.log(val);
+            },
+
+        },
+        created() {
+
+        }
+    })
+</script>
+
+</html>

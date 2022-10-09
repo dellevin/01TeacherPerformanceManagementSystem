@@ -1,0 +1,356 @@
+<!DOCTYPE html>
+<html>
+
+<head>
+	<title></title>
+	<meta charset="UTF-8">
+	<link rel="stylesheet" href="../../element-ui-2.13.0/lib/theme-chalk/index.css" />
+	<script type="text/javascript" src="../../vue/vue-v2.6.10.js"></script>
+	<script type="text/javascript" src="../../element-ui-2.13.0/lib/index.js"></script>
+	<script type="text/javascript" src="../../vue/axios-0.18.0.js"></script>
+</head>
+
+<body>
+	<div id="app">
+		<el-tag type="info" effect="dark" v-if="inputVisible" closable="true" :disable-transitions="disable"
+			@close="handleClose">教师科研管理</el-tag>
+		<div v-if="inputVisible">
+			<template>
+				<!-- 
+					handleSelectionChange 就是在点击复选框时执行的方法
+				-->
+				<el-table :data="tableData" @selection-change="handleSelectionChange" size="medium"
+					highlight-current-row="true" style="width: 100%">
+					<!-- 
+						type类型为selection 那么页面效果就是复选框
+						prop属性值为uid，那么每个用户的id就绑定在了复选框中
+					-->
+					<el-table-column type="selection" width="55" prop="tid">
+					</el-table-column>
+					<el-table-column width="100px" label="序号" type="index">
+					</el-table-column>
+					<el-table-column label="教师工号" prop="tnum">
+					</el-table-column>
+
+					<el-table-column label="教师姓名" prop="tname">
+					</el-table-column>
+
+<!-- 这里是科研信息 -->
+                    <el-table-column label="科研信息" prop="tscience">
+					</el-table-column>
+
+					<el-table-column label="分数" prop="tmarks">
+					</el-table-column>
+
+
+					<el-table-column label="操作">
+						<template slot-scope="scope">
+							<el-button size="mini" @click="handleEdit(scope.$index, scope.row)">修改</el-button>
+							<el-button size="mini" type="danger" @click="handlelook(scope.$index, scope.row)">详情
+							</el-button>
+						</template>
+					</el-table-column>
+					<el-table-column align="left" width="200px">
+						<template slot="header" slot-scope="scope">
+							<el-input v-model="search" size="mini" @blur="handleUserList" placeholder="输入用户名称搜索" />
+						</template>
+					</el-table-column>
+				</el-table>
+			</template>
+			<br />
+			<el-row>
+				<el-button type="warning" @click="delAll()">删除选中</el-button>
+				<el-button type="primary"><a href="add_scientific_research.html" target="main"
+						style="text-decoration: none;color:white">添加科研信息</a></el-button>
+			</el-row>
+			<template>
+				<div class="block" align="right">
+					<el-pagination @size-change="handleSizeChange" :slot="tableData"
+						@current-change="handleCurrentChange" :current-page="currentPage" :page-sizes="[3, 4, 5, 6]"
+						:page-size="pageSize" layout="total, sizes, prev, pager, next, jumper, slot"
+						:total="totalCount">
+					</el-pagination>
+				</div>
+			</template>
+		</div>
+
+		<!-- 修改 -->
+		<el-dialog title="修改用户" :visible.sync="dialogVisible" :close-on-click-modal="false" width="50%">
+			<el-form :model="ruleForm" :rules="rules" ref="ruleForm" label-width="100px" class="demo-ruleForm">
+				<el-form-item label="教师工号" prop="tnum">
+					<el-input v-model="ruleForm.tnum" style="width: 210px;"></el-input>
+				</el-form-item>
+				<el-form-item label="教师姓名" prop="tname">
+					<el-input v-model="ruleForm.tname" style="width: 210px;"></el-input>
+				</el-form-item>
+				<el-form-item label="科研信息" prop="tscience">
+					<el-input v-model="ruleForm.tscience" style="width: 210px;"></el-input>
+				</el-form-item>
+				<el-form-item label="分数" prop="tmarks">
+					<el-input v-model="ruleForm.tmarks" style="width: 210px;"></el-input>
+				</el-form-item>
+
+			</el-form>
+
+			<span slot="footer" class="dialog-footer">
+				<el-button @click="dialogVisible = false">取 消</el-button>
+				<el-button type="primary" @click="submitForm('ruleForm')">确 定</el-button>
+			</span>
+		</el-dialog>
+
+		<!-- 详情 -->
+		<el-dialog title="用户信息" :visible.sync="dialogVisible1" :close-on-click-modal="false" width="30%">
+			<el-form disabled :model="ruleForm" :rules="rules" ref="ruleForm" label-width="100px" class="demo-ruleForm">
+				<el-form-item label="教师工号" prop="tnum">
+					<el-input v-model="ruleForm.tnum" style="width: 210px;"></el-input>
+				</el-form-item>
+				<el-form-item label="教师姓名" prop="tname">
+					<el-input v-model="ruleForm.tname" style="width: 210px;"></el-input>
+				</el-form-item>
+				<el-form-item label="科研信息" prop="tscience">
+					<el-input v-model="ruleForm.tscience" type="textarea"  style="width: 210px;"></el-input>
+				</el-form-item>
+			</el-form>
+
+
+		</el-dialog>
+	</div>
+</body>
+<script>
+	axios.defaults.withCredentials = true
+	new Vue({
+		el: "#app",
+		data: {
+			/*分页相关*/
+			tableData: [], //当前页要展示的分页列表数据
+			search: '', //查询条件
+			pageSize: 3, //每页显示的记录数
+			currentPage: 1, //当前页码
+			totalCount: '', //总记录数
+			/*批量删除*/
+			multipleSelection: [], //批量删除存放选中的复选框中对象的数组
+			delarr: [], //存放删除的数据
+			/*选项卡*/
+			inputVisible: true,
+			disable: false,
+			/* 对话框 */
+			dialogVisible: false,
+			dialogVisible1: false,
+			ruleForm: {
+				tid:'',
+				tnum:'',
+				tname:'',
+				tscience:'',
+				tmarks:''
+			},
+			rules: {
+				tnum: [{
+						required: true,
+						message: '请输入...',
+						trigger: 'blur'
+					},
+					{
+						min: 1,
+						max: 11,
+						message: '长度在 3 到 5 个字符',
+						trigger: 'blur'
+					}],
+				tname: [{
+					required: true,
+					message: '请输入...',
+					trigger: 'blur'
+				}],
+				tscience: [{
+					required: true,
+					message: '请输入...',
+					trigger: 'blur'
+				}],
+				tmarks: [{
+					required: true,
+					message: '请输入分数',
+					trigger: 'blur'
+				}]
+			},
+		},
+		methods: {
+			//点击选项卡小叉叉的方法
+			handleClose() {
+				this.inputVisible = false;
+				this.disable = true;
+			},
+			//点击修改按钮的方法
+			handleEdit(index, row) {
+				//让修改的对话框出现
+				this.dialogVisible = true;
+				//为修改页面表单的数据源赋值
+				this.ruleForm.tid = row.tid;
+				this.ruleForm.tnum = row.tnum;
+				this.ruleForm.tname = row.tname;
+				this.ruleForm.tscience = row.tscience;
+				this.ruleForm.tmarks = row.tmarks;
+			},
+			//点击详情按钮的方法
+			handlelook(index, row) {
+				//让详情的对话框出现
+				this.dialogVisible1 = true;
+				//为表单的数据源赋值
+				this.ruleForm = row;
+			},
+			//点击复选框时触发的方法
+			handleSelectionChange(val) {
+				//参数val就是当前被选中的所有用户保存的数组
+				this.multipleSelection = val; //将要删除的所有对象保存起来
+			},
+			//点击批量删除按钮的方法
+			delAll() {
+				//先清空保存所有id的数组
+				this.delarr = [];
+				//遍历保存删除用户对象的数组，取到每个用户的id
+				for (let i in this.multipleSelection) {
+					//保存所有用户的id，到存放id的数组中
+					this.delarr.push(this.multipleSelection[i].tnum);
+				}
+				//先进行非空判断
+				if (this.delarr.length != 0) {
+					this.$confirm('此操作将永久删除该用户, 是否继续?', '提示', {
+						confirmButtonText: '确定',
+						cancelButtonText: '取消',
+						type: 'warning'
+					}).then(() => {
+						//发送axios请求
+						axios({
+							method: "get",
+							url: "http://localhost:8080/BackEnd/Tresearch?function=delAll&ids=" + this
+								.delarr
+						}).then(response => {
+							if (response.data.code == 200) {
+								this.$message({
+									message: response.data.msg,
+									type: "success"
+								})
+								setTimeout(function () {
+									window.location = "scientific_research.html";
+								}, 1500)
+							} else {
+								this.$message({
+									message: response.data.msg,
+									type: "error"
+								})
+							}
+						})
+					}).catch(() => {
+						this.$message({
+							type: 'info',
+							message: '已取消删除'
+						});
+					});
+				} else {
+					this.$message({
+						message: "请先选择要删除的用户吧",
+						type: "warning"
+					})
+				}
+			},
+			//每页数据量发生改变的方法
+			handleSizeChange: function (size) {
+				//更新每页数据量的值
+				this.pageSize = size;
+				//重新调用获取方法
+				this.findAllUser();
+			},
+			//当前页码发生改变的方法
+			handleCurrentChange: function (currentPage) {
+				//更新当前页码的值
+				this.currentPage = currentPage;
+				//重新调用获取方法
+				this.findAllUser();
+			},
+			//模糊查询输入框失焦事件，进行模糊查询的方法
+			handleUserList() {
+				//将当前页码的值改为1
+				this.currentPage = 1;
+				//模糊查询之后的结果依旧需要分页展示，所以我们还是要调用获取方法
+				this.findAllUser();
+			},
+			//获取所有用户的方法
+			findAllUser() {
+
+				let str = "http://localhost:8080/BackEnd/Tresearch?function=findAllTresearch" +
+					"&currentPage=" + this.currentPage + "&pageSize=" + this.pageSize;
+				//如果有模糊的内容
+				if (this.search != "" && this.search.trim() != "") {
+					//在原有的路径上，拼接模糊条件
+					str += "&search=" + this.search;
+				}
+				axios({
+					method: "get",
+					/*
+						使用ElementUI的分页组件，实现分页功能，页面中是可以改变当前页码及每页数据量的
+					*/
+					url: str
+				}).then(response => {
+					if (response.data.code == 200) {
+						//为用户数组赋值
+						this.tableData = response.data.data.list;
+						//为总数量赋值
+						this.totalCount = response.data.data.totalCount;
+					} else {
+						this.$message({
+							message: response.data.msg,
+							type: "error"
+						})
+					}
+				})
+			},
+			//修改对话框中点击确定按钮的方法
+			submitForm(formName) {
+				this.$refs[formName].validate((valid) => {
+					if (valid) {
+						let params = new URLSearchParams();
+
+						for (let key in this.ruleForm) {
+							params.append(key, this.ruleForm[key]);
+							console.log(key+"------"+ this.ruleForm[key]);
+						}
+						params.append("function", "updateUser");
+
+					
+						axios({
+							method: "post",
+							url: "http://localhost:8080/BackEnd/Tresearch",
+							data: params
+						}).then(response => {
+							if (response.data.code == 200) {
+								this.$message({
+									message: response.data.msg,
+									type: "success"
+								})
+								setTimeout(function () {
+									window.location = "scientific_research.html";
+								}, 1500)
+							} else {
+								this.$message({
+									message: response.data.msg,
+									type: "error"
+								})
+							}
+						})
+					} else {
+						this.$message({
+							message: "数据有误",
+							type: "error"
+						})
+					}
+				});
+			},
+			resetForm(formName) {
+
+			}
+		},
+		created() {
+			this.findAllUser();
+		}
+	})
+</script>
+
+</html>
